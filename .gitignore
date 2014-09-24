@@ -1,1 +1,7 @@
 pnglibconf.h
+projects/vstudio12/Release
+projects/vstudio12/libpng/Release
+projects/vstudio12/pnglibconf/Release
+projects/vstudio12/pngtest/Release
+projects/vstudio12/pngvalid/Release
+projects/vstudio12/zlib/Release
