@@ -79,15 +79,13 @@ pngwutil$(O): png.h pngconf.h pnglibconf.h pngpriv.h pngstruct.h pnginfo.h pngde
 
 libpng.lib: $(OBJS1) $(OBJS2) $(OBJS3)
 	del libpng.lib
-	lib libpng $(OBJS1);
-	lib libpng $(OBJS2);
-	lib libpng $(OBJS3);
+	lib -out:$@ $(OBJS1) $(OBJS2) $(OBJS3)
 
 pngtest$(O): png.h pngconf.h pnglibconf.h
 	$(CC) -c $(CPPFLAGS) $(CFLAGS) $*.c $(ERRFILE)
 
 pngtest.exe: pngtest.obj libpng.lib
-	$(LD) $(LDFLAGS) pngtest.obj,,,libpng.lib ..\zlib\zlib.lib ;
+	$(LD) $(LDFLAGS) pngtest.obj,,,libpng.lib ..\zlib\zlib.lib
 
 test: pngtest.exe
 	pngtest
