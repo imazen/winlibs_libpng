@@ -27,7 +27,7 @@ environment:
 
 
 install:
-  - ps: $jobname = "Environment: build_platform=$(env:build_platform), build_compiler=$(env:build_compiler)";
+  - ps: '$jobname = "Environment: build_platform=$(env:build_platform), build_compiler=$(env:build_compiler)"'
   - ps: $nl = "`r`n"
   - ps: $wc = New-Object 'System.Net.WebClient'
   - ps: if($env:build_platform -eq 'x64') {
