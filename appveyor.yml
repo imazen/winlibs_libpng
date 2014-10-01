@@ -1,0 +1,168 @@
+shallow_clone: true
+
+
+environment:
+  # settings
+  static_runtime: 1
+  
+  static_vcargs: -DCMAKE_C_FLAGS_RELEASE=/MT
+  static_gcargs: -DCMAKE_SHARED_LINKER_FLAGS=-static
+  
+  cmake_args: -DCMAKE_LIBRARY_PATH=zlib -DCMAKE_INCLUDE_PATH=zlib
+  
+  
+  matrix:
+    - build_platform: "x86"
+      build_compiler: "msvc"
+    
+    - build_platform: "x64"
+      build_compiler: "msvc"
+    
+    - build_platform: "x86"
+      build_compiler: "mingw"
+    
+    - build_platform: "x64"
+      build_compiler: "mingw"
+
+
+
+install:
+  - ps: $jobname = "Environment: build_platform=$(env:build_platform), build_compiler=$(env:build_compiler)";
+  - ps: $nl = "`r`n"
+  - ps: $wc = New-Object 'System.Net.WebClient'
+  - ps: if($env:build_platform -eq 'x64') {
+          $env:vcvar_arg = 'x86_amd64';
+          $env:vc_cm_arg = 'Visual Studio 12 Win64';
+        }
+        else {
+          $env:vcvar_arg = 'x86';
+          $env:vc_cm_arg = 'Visual Studio 12';
+        }
+  
+  
+  # functions
+  
+  - ps: function Fetch-Latest-Artifact($usr, $prj, $file, $jobname='') {
+          $data = Invoke-RestMethod -Uri "https://ci.appveyor.com/api/projects/$usr/$prj";
+          $data.build.jobs | % {
+            if($_.name -eq $jobname)
+            {
+              $url = "https://ci.appveyor.com/api/buildjobs/$($_.jobId)/artifacts";
+              $data = Invoke-RestMethod -Uri $url;
+              $data.filename | % {
+                if($_ -match $file) {
+                  $url = "$url/$_";
+                  $wc.DownloadFile($url, $_);
+                  return $_;
+                }
+              }
+            }
+          }
+        }
+  
+  - ps: function Print-File($txt) {
+          Get-Content $txt | ForEach-Object {
+            echo "$_"
+          }
+        }
+  
+  - ps: function Invoke($exe, $al, $output=0) {
+          echo "$nl> INVOKE $exe $al <$nl$nl";
+          if($al) {
+            Measure-Command {
+              $process = (start-process $exe $al -Wait -NoNewWindow -RedirectStandardOutput C:\out.txt -RedirectStandardError C:\err.txt);
+            }
+          }
+          else {
+            Measure-Command {
+              $process = (start-process $exe -Wait -NoNewWindow -RedirectStandardOutput C:\out.txt -RedirectStandardError C:\err.txt);
+            }
+          }
+          
+          if($output) {
+            echo "stdout:"; print-file 'C:\out.txt';
+            echo "stderr:"; print-file 'C:\err.txt';
+          }
+          return $process.ExitCode;
+        }
+  
+  # warning: ugly
+  - ps: function Push-Ctest-Results($dir, $prefix='') {
+          $head = "<?xml version=`"1.0`" encoding=`"utf-8`"?>`n<assembly name=`"`" run-date=`"1970-01-01`" run-time=`"00:00:00`" configFile=`"`" time=`"0`" total=`"0`" passed=`"0`" failed=`"0`" skipped=`"0`" environment=`"`">`n<class time=`"0`" name=`"`" total=`"0`" passed=`"0`" failed=`"0`" skipped=`"0`">`n";
+          $foot = "</class>`n</assembly>`n";
+          $out = Select-String '(?s)\d+\/\d+ Testing.*?end time.*?[-]{58}' -input ((Get-Content $dir\Testing\Temporary\LastTest*.log) -join "`n") -AllMatches;
+          $xml = $head;
+          $num = 0;
+          
+          Select-String '(\w+)\s+(\d+)\s+([\d\.]{5})' -input (Get-Content $dir\Testing\Temporary\CTestCostData.txt)-AllMatches | % {$_.Matches} | % {
+            $name = $prefix + $_.Groups[1].Value;
+            $res = @{$true="Pass";$false="Fail"}[$_.Groups[2].Value -eq 1];
+            $time = $_.Groups[3].Value;
+            $output = $out.Matches[$num].Value -replace "$([char]8)", "";
+            
+            if($output.length -gt 1000) {$output = $output.substring(0,1000) + "`n`n*snip*"};
+            
+            $output = [Security.SecurityElement]::Escape($output);
+            $num++;
+            $xml += "<test name=`"$name`" type=`"`" method=`"`" result=`"$res`" time=`"$time`">`n<output>$output</output>`n</test>`n"
+          };
+          
+          $xml += $foot;
+          $xml > ".\xunit_tmp.xml";
+          $wc.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\xunit_tmp.xml));
+        }
+  
+  # fetch deps
+  - ps: $zip = Fetch-Latest-Artifact 'nathanaeljones' 'zlib' 'zip' $jobname
+  - ps: iex "7z x -ozlib $zip"
+  - copy /y zlib\zlibstatic.lib zlib\zlib.lib
+  
+  # get mingw-w64 (C:\mingw64)
+  - ps: if($env:build_compiler -eq 'mingw' -and $env:build_platform -eq 'x64') {
+      invoke 'curl' '-L -o mw64.7z "http://mingw.blob.core.windows.net/x86-64-491-release-posix-seh-rt-v3-rev1/mw64.7z"';
+      invoke '7z' 'x -oC:\ mw64.7z'; }
+  
+  # sh is breaking mingw builds; remove
+  - for %%i in (sh.exe) do @del "%%~$PATH:i"
+
+
+
+build_script:
+  
+  # build msvc
+  
+  - '"C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall" %vcvar_arg%'
+  
+  - SET zip=libpng-msvc12-%build_platform%.zip
+  - SET cmake_cmd=cmake -G "%vc_cm_arg%" %cmake_args%
+  - if [%static_runtime%]==[1] SET cmake_cmd=%cmake_cmd% %static_vcargs%
+  
+  - if [%build_compiler%]==[msvc] (
+      %cmake_cmd% &&
+      msbuild libpng.sln /p:Configuration=Release /v:m &&
+      7z a %zip% .\Release\libpng15.dll .\Release\libpng15.lib .\Release\libpng15_static.lib png.h pngconf.h pnglibconf.h &&
+      appveyor PushArtifact %zip%
+    )
+  
+  
+  # build mingw
+  
+  - if [%build_compiler%]==[mingw] if [%build_platform%]==[x86] SET PATH=C:\MinGW\bin;%PATH%
+  - if [%build_compiler%]==[mingw] if [%build_platform%]==[x64] SET PATH=C:\mingw64\bin;%PATH%
+  
+  - SET zip=libpng-mingw-%build_platform%.zip
+  - SET cmake_cmd=cmake -G "MinGW Makefiles" %cmake_args%
+  - if [%static_runtime%]==[1] SET cmake_cmd=%cmake_cmd% %static_gcargs%
+  
+  - if [%build_compiler%]==[mingw] (
+      %cmake_cmd% &&
+      mingw32-make &&
+      7z a %zip% libpng.a libpng.dll.a libpng.dll png.h pngconf.h pnglibconf.h &&
+      appveyor PushArtifact %zip%
+    )
+
+
+test_script:
+  - ctest -C Release
+  - ps: Push-Ctest-Results '.'
+  - ps: Push-AppveyorArtifact Testing\Temporary\LastTest*.log
