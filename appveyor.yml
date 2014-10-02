@@ -98,6 +98,7 @@ install:
   - nuget install zlib-%build_compiler%-%build_platform% -Source https://ci.appveyor.com/nuget/zlib-94hmpf3q011d
   - move zlib* zlib
   - if [%build_compiler%]==[msvc] copy /y zlib\zlibstatic.lib zlib\zlib.lib
+  - if [%build_compiler%]==[mingw] copy /y zlib\libzlibstatic.a zlib\libz.a
   
   # get mingw-w64 (C:\mingw64)
   - ps: if($env:build_compiler -eq 'mingw' -and $env:build_platform -eq 'x64') {
