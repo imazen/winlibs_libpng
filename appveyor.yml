@@ -15,14 +15,14 @@ environment:
     - build_platform: "x86"
       build_compiler: "msvc"
     
-    #- build_platform: "x64"
-    #  build_compiler: "msvc"
+    - build_platform: "x64"
+      build_compiler: "msvc"
     
-    #- build_platform: "x86"
-    #  build_compiler: "mingw"
+    - build_platform: "x86"
+      build_compiler: "mingw"
     
-    #- build_platform: "x64"
-    #  build_compiler: "mingw"
+    - build_platform: "x64"
+      build_compiler: "mingw"
 
 
 
@@ -82,7 +82,9 @@ install:
             $time = $_.Groups[3].Value;
             $output = $out.Matches[$num].Value -replace "$([char]8)", "";
             
-            if($output.length -gt 1000) {$output = $output.substring(0,1000) + "`n`n*snip*"};
+            $maxlen = 5000;
+            if($output.length -gt $maxlen) {$output = $output.substring(0,$maxlen) + "`n`n*snip*"};
+            if($time -eq '0') $time = '0.000';
             
             $output = [Security.SecurityElement]::Escape($output);
             $num++;
@@ -111,10 +113,6 @@ install:
 
 
 build_script:
-  
-  - ps: $wc.DownloadFile("https://dl.dropboxusercontent.com/u/5339562/xunit_tmp.xml", "$($env:APPVEYOR_BUILD_FOLDER)\xunit_tmp.xml")
-  - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\xunit_tmp.xml))
-  - exit 1
   
   # build msvc
   
