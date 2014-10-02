@@ -52,7 +52,7 @@ install:
               $data.filename | % {
                 if($_ -match $file) {
                   $url = "$url/$_";
-                  $wc.DownloadFile($url, ".\$_");
+                  $wc.DownloadFile($url, "$($env:APPVEYOR_BUILD_FOLDER)\$_");
                   return $_;
                 }
               }
