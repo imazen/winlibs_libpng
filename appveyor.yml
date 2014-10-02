@@ -51,8 +51,9 @@ install:
               $data = Invoke-RestMethod -Uri $url;
               $data.filename | % {
                 if($_ -match $file) {
+                  echo "Downloading $_ ...";
                   $url = "$url/$_";
-                  $wc.DownloadFile($url, $_);
+                  $wc.DownloadFile($url, ".\$_");
                   return $_;
                 }
               }
@@ -114,7 +115,9 @@ install:
   
   # fetch deps
   - ps: $zip = Fetch-Latest-Artifact 'nathanaeljones' 'zlib' 'zip' $jobname
-  - ps: iex "7z x -ozlib $zip"
+  - ps: $jobname
+  - ps: $zip
+  - ps: iex "7z x -ozlib .\$zip"
   - copy /y zlib\zlibstatic.lib zlib\zlib.lib
   
   # get mingw-w64 (C:\mingw64)
