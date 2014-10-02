@@ -112,7 +112,7 @@ install:
 
 build_script:
   
-  - ps: $wc.DownloadFile("https://dl.dropboxusercontent.com/u/5339562/xunit_tmp.xml", ".\xunit_tmp.xml")
+  - ps: $wc.DownloadFile("https://dl.dropboxusercontent.com/u/5339562/xunit_tmp.xml", "$($env:APPVEYOR_BUILD_FOLDER)\xunit_tmp.xml")
   - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\xunit_tmp.xml))
   - exit 1
   
