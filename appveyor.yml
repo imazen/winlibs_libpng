@@ -115,9 +115,7 @@ install:
   
   # fetch deps
   - ps: $zip = Fetch-Latest-Artifact 'nathanaeljones' 'zlib' 'zip' $jobname
-  - ps: $jobname
-  - ps: $zip
-  - ps: iex "7z x -ozlib .\$zip"
+  - ps: iex "7z x -ozlib $(resolve-path $zip)"
   - copy /y zlib\zlibstatic.lib zlib\zlib.lib
   
   # get mingw-w64 (C:\mingw64)
