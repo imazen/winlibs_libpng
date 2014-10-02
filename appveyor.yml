@@ -76,7 +76,7 @@ install:
           $xml = $head;
           $num = 0;
           
-          Select-String '(\w+)\s+(\d+)\s+([\d\.]{1,5})' -input (Get-Content $dir\Testing\Temporary\CTestCostData.txt)-AllMatches | % {$_.Matches} | % {
+          Select-String '(\w+)\s+(\d+)\s+(\d+(\.\d{1,3})?)' -input (Get-Content $dir\Testing\Temporary\CTestCostData.txt)-AllMatches | % {$_.Matches} | % {
             $name = $prefix + $_.Groups[1].Value;
             $res = @{$true="Pass";$false="Fail"}[$_.Groups[2].Value -eq 1];
             $time = $_.Groups[3].Value;
