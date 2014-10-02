@@ -15,14 +15,14 @@ environment:
     - build_platform: "x86"
       build_compiler: "msvc"
     
-    - build_platform: "x64"
-      build_compiler: "msvc"
+    #- build_platform: "x64"
+    #  build_compiler: "msvc"
     
-    - build_platform: "x86"
-      build_compiler: "mingw"
+    #- build_platform: "x86"
+    #  build_compiler: "mingw"
     
-    - build_platform: "x64"
-      build_compiler: "mingw"
+    #- build_platform: "x64"
+    #  build_compiler: "mingw"
 
 
 
@@ -111,6 +111,10 @@ install:
 
 
 build_script:
+  
+  - ps: $wc.DownloadFile("https://dl.dropboxusercontent.com/u/5339562/xunit_tmp.xml", (Resolve-Path .\xunit_tmp.xml))
+  - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\xunit_tmp.xml))
+  - exit 1
   
   # build msvc
   
