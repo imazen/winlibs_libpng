@@ -84,7 +84,7 @@ install:
             
             $maxlen = 5000;
             if($output.length -gt $maxlen) {$output = $output.substring(0,$maxlen) + "`n`n*snip*"};
-            if($time -eq '0') $time = '0.000';
+            if($time -eq '0') {$time = '0.000'};
             
             $output = [Security.SecurityElement]::Escape($output);
             $num++;
