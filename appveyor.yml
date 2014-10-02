@@ -114,8 +114,8 @@ install:
   
   # fetch deps
   - ps: $zip = Fetch-Latest-Artifact 'nathanaeljones' 'zlib' 'zip' $jobname
-  - ps: iex "7z x -ozlib $(resolve-path $zip)"
-  - copy /y zlib\zlibstatic.lib zlib\zlib.lib
+  - ps: iex "7z x -ozlib $zip"
+  - if [%build_compiler%]==[msvc] copy /y zlib\zlibstatic.lib zlib\zlib.lib
   
   # get mingw-w64 (C:\mingw64)
   - ps: if($env:build_compiler -eq 'mingw' -and $env:build_platform -eq 'x64') {
@@ -163,6 +163,8 @@ build_script:
 
 
 test_script:
-  - ctest -C Release
+  - SET fail=0
+  - ctest -C Release || SET fail=1 & ver > nul
   - ps: Push-Ctest-Results '.'
   - ps: Push-AppveyorArtifact Testing\Temporary\LastTest*.log
+  - exit %fail%
