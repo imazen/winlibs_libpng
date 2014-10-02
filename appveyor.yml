@@ -51,7 +51,6 @@ install:
               $data = Invoke-RestMethod -Uri $url;
               $data.filename | % {
                 if($_ -match $file) {
-                  echo "Downloading $_ ...";
                   $url = "$url/$_";
                   $wc.DownloadFile($url, ".\$_");
                   return $_;
