@@ -115,7 +115,8 @@ install:
         }
   
   # fetch deps
-  - nuget install zlib-%build_compiler%-%build_platform% -OutputDirectory zlib -Source https://ci.appveyor.com/nuget/zlib-94hmpf3q011d
+  - nuget install zlib-%build_compiler%-%build_platform% -Source https://ci.appveyor.com/nuget/zlib-94hmpf3q011d
+  - move zlib* zlib
   - if [%build_compiler%]==[msvc] copy /y zlib\zlibstatic.lib zlib\zlib.lib
   - if [%build_compiler%]==[mingw] copy /y zlib\libzlibstatic.a zlib\libz.a
   
