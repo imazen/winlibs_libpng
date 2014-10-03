@@ -5,8 +5,10 @@ environment:
   # settings
   static_runtime: 1
   
-  static_vcargs: -DCMAKE_C_FLAGS_RELEASE=/MT
   static_gcargs: -DCMAKE_SHARED_LINKER_FLAGS=-static
+  static_vcargs:
+  #static_vcargs: -DCMAKE_C_FLAGS_RELEASE=/MT
+  # ^ don't.
   
   cmake_args: -DCMAKE_LIBRARY_PATH=zlib -DCMAKE_INCLUDE_PATH=zlib
   
@@ -41,6 +43,23 @@ install:
   
   
   # functions
+  
+  - ps: function zip2nuget($file, $id) {
+          $tmp = 'C:\nutmp';
+          $here = get-location;
+          
+          if(Test-Path $tmp) {
+            Remove-Item $tmp -Force -Recurse;
+          }
+          
+          iex "7z x -o$tmp $file";
+          cd $tmp;
+          iex "nuget spec $id";
+          (Get-Content "$id.nuspec") -join "`n" -replace "(?s)<licenseUrl>.*</dependencies>", "<description>$id</description>" | Out-File "$id.nuspec";
+          iex "nuget pack $id.nuspec -version $($env:APPVEYOR_BUILD_VERSION)";
+          copy "*.nupkg" $here;
+          cd $here;
+        }
   
   - ps: function Print-File($txt) {
           Get-Content $txt | ForEach-Object {
@@ -97,14 +116,13 @@ install:
         }
   
   # fetch deps
-  - nuget install zlib-%build_compiler%-%build_platform% -Source https://ci.appveyor.com/nuget/zlib-94hmpf3q011d
-  - move zlib* zlib
+  - nuget install zlib-%build_compiler%-%build_platform% -OutputDirectory zlib -Source https://ci.appveyor.com/nuget/zlib-94hmpf3q011d
   - if [%build_compiler%]==[msvc] copy /y zlib\zlibstatic.lib zlib\zlib.lib
   - if [%build_compiler%]==[mingw] copy /y zlib\libzlibstatic.a zlib\libz.a
   
   # get mingw-w64 (C:\mingw64)
   - ps: if($env:build_compiler -eq 'mingw' -and $env:build_platform -eq 'x64') {
-      invoke 'curl' '-L -o mw64.7z "http://mingw.blob.core.windows.net/x86-64-491-release-posix-seh-rt-v3-rev1/mw64.7z"';
+      invoke 'curl' '-L -o mw64.7z "http://libgd.blob.core.windows.net/mingw/x86_64-4.9.1-release-posix-seh-rt_v3-rev1.7z"';
       invoke '7z' 'x -oC:\ mw64.7z'; }
   
   # sh is breaking mingw builds; remove
@@ -129,6 +147,9 @@ build_script:
       appveyor PushArtifact %zip%
     )
   
+  - ps: if(Test-Path $env:zip) { zip2nuget $env:zip "libpng-$($env:build_compiler)-$($env:build_platform)" }
+  
+  
   
   # build mingw
   
@@ -145,6 +166,9 @@ build_script:
       7z a %zip% libpng.a libpng.dll.a libpng15.dll png.h pngconf.h pnglibconf.h &&
       appveyor PushArtifact %zip%
     )
+  
+  - ps: if(Test-Path $env:zip) { zip2nuget $env:zip "libpng-$($env:build_compiler)-$($env:build_platform)" }
+
 
 
 test_script:
@@ -154,3 +178,6 @@ test_script:
   - ps: Push-AppveyorArtifact xunit_tmp.xml
   - ps: Push-AppveyorArtifact Testing\Temporary\LastTest.log
   - exit %fail%
+
+on_success:
+  - ps: Push-AppveyorArtifact *.nupkg
