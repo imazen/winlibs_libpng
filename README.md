@@ -29,3 +29,13 @@ SDK](http://windows.php.net/downloads/php-sdk/)
 - open projects/vstudio2012/libpng.sln
 - build the libpng project using "Release" or "Release Library" configuration
 - build the libpng project using "Debug" or "Debug Library" configuration
+
+### Appveyor builds
+Current master:
+
+[![Build status](https://ci.appveyor.com/api/projects/status/2ifs8txm9ltwmfsd/branch/master)](https://ci.appveyor.com/project/nathanaeljones/libpng/branch/master)
+
+Last build:
+
+[![Build status](https://ci.appveyor.com/api/projects/status/2ifs8txm9ltwmfsd)](https://ci.appveyor.com/project/nathanaeljones/libpng)
+
