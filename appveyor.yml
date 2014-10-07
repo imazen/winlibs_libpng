@@ -46,6 +46,7 @@ install:
   # fetch deps
   - nuget install zlib-%build_compiler%-%build_platform% -Source https://ci.appveyor.com/nuget/zlib-94hmpf3q011d
   - move zlib* zlib
+  - del zlib\*.dll*
   - ps: ls zlib\*_static.lib | % {move $_ ($_ -replace '_static', '') -force}
   
   # get mingw-w64 (C:\mingw64)
