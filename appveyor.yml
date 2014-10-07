@@ -47,10 +47,6 @@ install:
   - nuget install zlib-%build_compiler%-%build_platform% -Source https://ci.appveyor.com/nuget/zlib-94hmpf3q011d
   - move zlib* zlib
   
-  # make static names cmake friendly
-  - if [%build_compiler%]==[msvc] copy /y zlib\zlibstatic.lib zlib\zlib.lib
-  - if [%build_compiler%]==[mingw] copy /y zlib\libzlibstatic.a zlib\libz.a
-  
   # get mingw-w64 (C:\mingw64)
   - ps: if($env:build_compiler -eq 'mingw' -and $env:build_platform -eq 'x64') {
       invoke 'curl' '-L -o mw64.7z "http://libgd.blob.core.windows.net/mingw/x86_64-4.9.1-release-posix-seh-rt_v3-rev1.7z"';
@@ -74,7 +70,7 @@ build_script:
   - if [%build_compiler%]==[msvc] (
       %cmake_cmd% &&
       msbuild libpng.sln /p:Configuration=Release /v:m &&
-      7z a %zip% .\Release\libpng15.dll .\Release\libpng15.lib .\Release\libpng15_static.lib png.h pngconf.h pnglibconf.h &&
+      7z a %zip% .\Release\libpng.dll .\Release\libpng.lib .\Release\libpng_static.lib png.h pngconf.h pnglibconf.h &&
       appveyor PushArtifact %zip%
     )
   
@@ -94,7 +90,7 @@ build_script:
   - if [%build_compiler%]==[mingw] (
       %cmake_cmd% &&
       mingw32-make &&
-      7z a %zip% libpng.a libpng.dll.a libpng15.dll png.h pngconf.h pnglibconf.h &&
+      7z a %zip% libpng.a libpng.dll.a libpng.dll png.h pngconf.h pnglibconf.h &&
       appveyor PushArtifact %zip%
     )
   
