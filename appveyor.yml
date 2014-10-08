@@ -44,7 +44,7 @@ install:
   - ps: . .\gd-appveyor-helpers\appveyor_funcs.ps1
   
   # fetch deps
-  - nuget install zlib-%build_compiler%-%build_platform% -Source https://ci.appveyor.com/nuget/zlib-94hmpf3q011d
+  - nuget install zlib-%build_compiler%-%build_platform%-master -Source https://ci.appveyor.com/nuget/zlib-94hmpf3q011d
   - move zlib* zlib
   - del zlib\*.dll*
   - ps: ls zlib\*_static.lib | % {move $_ ($_ -replace '_static', '') -force}
@@ -61,6 +61,9 @@ install:
 
 build_script:
   
+  - ps: $nupkg_b = "libpng-$($env:build_compiler)-$($env:build_platform)-$($env:APPVEYOR_REPO_BRANCH)";
+  - ps: $nupkg_c = "libpng-$($env:build_compiler)-$($env:build_platform)-$($env:APPVEYOR_REPO_COMMIT)";
+  
   # build msvc
   
   - '"C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall" %vcvar_arg%'
@@ -76,7 +79,9 @@ build_script:
       appveyor PushArtifact %zip%
     )
   
-  - ps: if(Test-Path $env:zip) { zip2nuget $env:zip "libpng-$($env:build_compiler)-$($env:build_platform)" }
+  - ps: if(Test-Path $env:zip) {
+          zip2nuget $env:zip $nupkg_b;
+          zip2nuget $env:zip $nupkg_c; }
   
   
   
@@ -96,7 +101,9 @@ build_script:
       appveyor PushArtifact %zip%
     )
   
-  - ps: if(Test-Path $env:zip) { zip2nuget $env:zip "libpng-$($env:build_compiler)-$($env:build_platform)" }
+  - ps: if(Test-Path $env:zip) {
+          zip2nuget $env:zip $nupkg_b;
+          zip2nuget $env:zip $nupkg_c; }
 
 
 
@@ -108,4 +115,5 @@ test_script:
   - exit %fail%
 
 on_success:
-  - ps: Push-AppveyorArtifact *.nupkg
+  - ps: Push-AppveyorArtifact "$nupkg_b*.nupkg"
+  - ps: Push-AppveyorArtifact "$nupkg_c*.nupkg"
