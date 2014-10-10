@@ -39,3 +39,6 @@ Last build:
 
 [![Build status](https://ci.appveyor.com/api/projects/status/2ifs8txm9ltwmfsd)](https://ci.appveyor.com/project/nathanaeljones/libpng)
 
+### Drone.io build
+
+[![Build Status](https://drone.io/github.com/imazen/libpng/status.png)](https://drone.io/github.com/imazen/libpng/latest)
