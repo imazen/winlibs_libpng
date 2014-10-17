@@ -33,11 +33,11 @@ SDK](http://windows.php.net/downloads/php-sdk/)
 ### Appveyor builds
 Current master:
 
-[![Build status](https://ci.appveyor.com/api/projects/status/2ifs8txm9ltwmfsd/branch/master)](https://ci.appveyor.com/project/nathanaeljones/libpng/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/2ifs8txm9ltwmfsd/branch/master)](https://ci.appveyor.com/project/imazen/libpng/branch/master)
 
 Last build:
 
-[![Build status](https://ci.appveyor.com/api/projects/status/2ifs8txm9ltwmfsd)](https://ci.appveyor.com/project/nathanaeljones/libpng)
+[![Build status](https://ci.appveyor.com/api/projects/status/2ifs8txm9ltwmfsd)](https://ci.appveyor.com/project/imazen/libpng)
 
 ### Drone.io build
 
