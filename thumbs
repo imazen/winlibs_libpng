@@ -62,9 +62,10 @@ process_deps()
       cp $(./thumbs list_inc) ../../deps
       cp $(./thumbs list_slib) ../../deps
       
-      # look in both directories in case this is a dep as well
-      export "${i_dep_incdir}=../../deps;deps"
-      export "${i_dep_libdir}=../../deps;deps"
+      # look in both local and parent dep dirs
+      # msvc needs to look one dir up from build
+      export "${i_dep_incdir}=../../../deps;../../deps;../deps;deps"
+      export "${i_dep_libdir}=../../../deps;../../deps;../deps;deps"
       
       cd ..
     fi
@@ -116,7 +117,7 @@ fi
 
 # Local settings
 
-l_inc="./zlib.h ./zutil.h ./build/zconf.h"
+l_inc="./png.h ./pngconf.h ./build/pnglibconf.h"
 l_slib=
 l_dlib=
 l_bin=
@@ -132,24 +133,24 @@ case "$tbs_tools" in
 msvc12)
   cm_tools="Visual Studio 12"
   make="msbuild.exe libpng.sln //p:Configuration=Release //v:m"
-  l_slib="./build/Release/zlib_static.lib"
-  l_dlib="./build/Release/zlib.lib"
-  l_bin="./build/Release/zlib.dll"
+  l_slib="./build/Release/libpng_static.lib"
+  l_dlib="./build/Release/libpng.lib"
+  l_bin="./build/Release/libpng.dll"
   list="$l_bin $l_slib $l_dlib $l_inc" ;;
 gnu)
   cm_tools="Unix Makefiles"
   cm_args+=(-fPIC)
   make=make
-  l_slib="./build/libz.a"
-  l_dlib="./build/libz.so.1.2.7.3"
+  l_slib="./build/libpng.a"
+  l_dlib="./build/libpng.so.15.18.0"
   l_bin="$l_dlib"
   list="$l_slib $l_dlib $l_inc" ;;
 mingw)
   cm_tools="MinGW Makefiles"
   make=mingw32-make
-  l_slib="./build/libz.a"
-  l_dlib="./build/libz.dll.a"
-  l_bin="./build/libz.dll"
+  l_slib="./build/libpng.a"
+  l_dlib="./build/libpng.dll.a"
+  l_bin="./build/libpng.dll"
   list="$l_bin $l_slib $l_dlib $l_inc" ;;
 esac
 
