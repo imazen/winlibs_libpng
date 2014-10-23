@@ -59,8 +59,8 @@ process_deps()
       cd $dep || exit 1
       ./thumbs make || exit 1
       
-      cp $(./thumbs list_inc) ../../deps
-      cp $(./thumbs list_slib) ../../deps
+      cp -u $(./thumbs list_inc) ../../deps
+      cp -u $(./thumbs list_slib) ../../deps
       
       # look in both local and parent dep dirs
       export "${i_dep_incdir}=../../deps;deps"
