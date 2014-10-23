@@ -60,10 +60,6 @@ build_script:
   - ps: $nupkg_b = "libpng-$($env:build_compiler)-$($env:build_platform)-$($env:APPVEYOR_REPO_BRANCH)";
   - ps: $nupkg_c = "libpng-$($env:build_compiler)-$($env:build_platform)-$($env:APPVEYOR_REPO_COMMIT)";
   
-  
-  - SET cmake_cmd=cmake -G "%vc_cm_arg%" %cmake_args%
-  - if [%static_runtime%]==[1] SET cmake_cmd=%cmake_cmd% %static_vcargs%
-  
   - SET tbs_settings=export tbs_tools=%build_compiler%;
                      export tbs_arch=%build_platform%;
                      export tbs_static_runtime=%static_runtime%

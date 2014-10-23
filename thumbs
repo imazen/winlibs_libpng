@@ -63,13 +63,16 @@ process_deps()
       cp $(./thumbs list_slib) ../../deps
       
       # look in both local and parent dep dirs
-      # msvc needs to look one dir up from build
-      export "${i_dep_incdir}=../../../deps;../../deps;../deps;deps"
-      export "${i_dep_libdir}=../../../deps;../../deps;../deps;deps"
+      export "${i_dep_incdir}=../../deps;deps"
+      export "${i_dep_libdir}=../../deps;deps"
       
       cd ..
     fi
   done
+  
+  # build scripts will most likely look for libs w/o suffixes
+  for lib in ../deps/*_static.lib; do mv $lib ${lib%_static.lib}.lib done
+  for lib in ../deps/*.dll.a; do mv $lib ${lib%.dll.a}.a done
   
   cd ..
 }
