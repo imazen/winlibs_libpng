@@ -65,7 +65,7 @@ build_script:
                      export tbs_static_runtime=%static_runtime%;
                      export tbsd_zlib_built=1;
                      export tbsd_zlib_incdir=zlib;
-                     export tbsd_zlib_libdir=zlib;
+                     export tbsd_zlib_libdir=zlib
   
   - bash -c "%tbs_settings%; ./thumbs make"
   - bash -c "%tbs_settings%; f=$(./thumbs list); 7z a %zip% $f"
