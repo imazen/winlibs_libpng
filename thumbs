@@ -145,7 +145,7 @@ l_bin=
 list=
 
 make=
-c_flags=()
+c_flags=
 cm_tools=
 cm_args=(-DCMAKE_BUILD_TYPE=$tbs_conf -Wno-dev)
 
@@ -165,7 +165,7 @@ msvc12)
   list="$l_bin $l_slib $l_dlib $l_inc" ;;
 gnu)
   cm_tools="Unix Makefiles"
-  cm_args+=(-fPIC)
+  c_flags+=" -fPIC"
   make=make
   l_slib="./build/libpng.a"
   l_dlib="./build/libpng.so.15.18.0"
@@ -190,9 +190,9 @@ esac
 case "$tbs_arch" in
 x64)
   [ $tbs_tools = msvc12 ] && cm_tools="$cm_tools Win64"
-  [ $tbs_tools = gnu -o $tbs_tools = mingw ] && c_flags+=(-m64) ;;
+  [ $tbs_tools = gnu -o $tbs_tools = mingw ] && c_flags+=" -m64" ;;
 x86)
-  [ $tbs_tools = gnu -o $tbs_tools = mingw ] && c_flags+=(-m32) ;;
+  [ $tbs_tools = gnu -o $tbs_tools = mingw ] && c_flags+=" -m32" ;;
 
 *) echo "Arch config not found for $tbs_arch"
    exit 1 ;;
@@ -216,7 +216,7 @@ make)
   mkdir build
   cd build
   
-  cm_args+=(-DCMAKE_C_FLAGS_$(upper $tbs_conf)="${c_flags[@]}")
+  cm_args+=(-DCMAKE_C_FLAGS_$(upper $tbs_conf)="$c_flags")
   cmake -G "$cm_tools" "${cm_args[@]}" .. || exit 1
   $make || exit 1
   
