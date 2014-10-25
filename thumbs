@@ -159,9 +159,9 @@ msvc12)
   cm_tools="Visual Studio 12"
   [ "$target" = "" ] && mstrg="libpng.sln" || mstrg="$target.vcxproj"
   make="msbuild.exe $mstrg //p:Configuration=$tbs_conf //v:m"
-  l_slib="./build/Release/libpng_static.lib"
-  l_dlib="./build/Release/libpng.lib"
-  l_bin="./build/Release/libpng.dll"
+  l_slib="./build/$tbs_conf/libpng_static.lib"
+  l_dlib="./build/$tbs_conf/libpng.lib"
+  l_bin="./build/$tbs_conf/libpng.dll"
   list="$l_bin $l_slib $l_dlib $l_inc" ;;
 gnu)
   cm_tools="Unix Makefiles"
