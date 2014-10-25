@@ -4,29 +4,29 @@ shallow_clone: true
 
 environment:
   matrix:
-    - build_platform: "x86"
-      build_compiler: "msvc12"
-      static_runtime: 0
+    - tbs_arch: "x86"
+      tbs_tools: "msvc12"
+      tbs_static_runtime: 0
     
-    - build_platform: "x64"
-      build_compiler: "msvc12"
-      static_runtime: 0
+    - tbs_arch: "x64"
+      tbs_tools: "msvc12"
+      tbs_static_runtime: 0
     
-    - build_platform: "x86"
-      build_compiler: "mingw"
-      static_runtime: 1
+    - tbs_arch: "x86"
+      tbs_tools: "mingw"
+      tbs_static_runtime: 1
     
-    - build_platform: "x64"
-      build_compiler: "mingw"
-      static_runtime: 1
+    - tbs_arch: "x64"
+      tbs_tools: "mingw"
+      tbs_static_runtime: 1
 
 
 
 install:
-  - ps: if($env:build_platform -eq 'x64') {
+  - ps: if($env:tbs_arch -eq 'x64') {
           $env:vcvar_arg = 'x86_amd64';
         }
-        elseif($env:build_platform -eq 'x86') {
+        elseif($env:tbs_arch -eq 'x86') {
           $env:vcvar_arg = 'x86';
         }
   
@@ -36,40 +36,34 @@ install:
   - ps: . .\gd-appveyor-helpers\appveyor_funcs.ps1
   
   # fetch deps
-  - nuget install zlib-%build_compiler%-%build_platform%-master -Source https://ci.appveyor.com/nuget/zlib-94hmpf3q011d
+  - nuget install zlib-%tbs_tools%-%tbs_arch%-master -Source https://ci.appveyor.com/nuget/zlib-94hmpf3q011d
   - move zlib* zlib
   - del zlib\*.dll*
   - ps: ls zlib\*_static.lib | % {move $_ ($_ -replace '_static', '') -force}
   
   # get mingw-w64 (C:\mingw64)
-  - ps: if($env:build_compiler -eq 'mingw' -and $env:build_platform -eq 'x64') {
+  - ps: if($env:tbs_tools -eq 'mingw' -and $env:tbs_arch -eq 'x64') {
       invoke 'curl' '-L -o mw64.7z "http://libgd.blob.core.windows.net/mingw/x86_64-4.9.1-release-posix-seh-rt_v3-rev1.7z"';
       invoke '7z' 'x -oC:\ mw64.7z'; }
-  
-  # sh is breaking mingw builds; remove
-  - for %%i in (sh.exe) do @del "%%~$PATH:i"
 
 
 
 build_script:
   - '"C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall" %vcvar_arg%'
-  - if [%build_compiler%]==[mingw] if [%build_platform%]==[x86] SET PATH=C:\MinGW\bin;%PATH%
-  - if [%build_compiler%]==[mingw] if [%build_platform%]==[x64] SET PATH=C:\mingw64\bin;%PATH%
+  - if [%tbs_tools%]==[mingw] if [%tbs_arch%]==[x86] SET PATH=C:\MinGW\bin;%PATH%
+  - if [%tbs_tools%]==[mingw] if [%tbs_arch%]==[x64] SET PATH=C:\mingw64\bin;%PATH%
   
-  - SET zip=libpng-%build_compiler%-%build_platform%.zip
-  - ps: $nupkg_b = "libpng-$($env:build_compiler)-$($env:build_platform)-$($env:APPVEYOR_REPO_BRANCH)";
-  - ps: $nupkg_c = "libpng-$($env:build_compiler)-$($env:build_platform)-$($env:APPVEYOR_REPO_COMMIT)";
+  - SET zip=libpng-%tbs_tools%-%tbs_arch%.zip
+  - ps: $nupkg_b = "libpng-$($env:tbs_tools)-$($env:tbs_arch)-$($env:APPVEYOR_REPO_BRANCH)";
+  - ps: $nupkg_c = "libpng-$($env:tbs_tools)-$($env:tbs_arch)-$($env:APPVEYOR_REPO_COMMIT)";
   
-  - SET tbs_settings=export tbs_tools=%build_compiler%;
-                     export tbs_arch=%build_platform%;
-                     export tbs_static_runtime=%static_runtime%;
-                     export tbsd_zlib_built=1;
-                     export tbsd_zlib_incdir=zlib;
-                     export tbsd_zlib_libdir=zlib
+  - SET tbsd_zlib_built=1
+  - SET tbsd_zlib_incdir=zlib
+  - SET tbsd_zlib_libdir=zlib
   
-  - bash -c "%tbs_settings%; ./thumbs make"
-  - bash -c "%tbs_settings%; f=$(./thumbs list); 7z a %zip% $f"
-  - appveyor PushArtifact %zip%
+  - thumbs make
+  - for /f "tokens=*" %%i in ('thumbs list') do set files=%%i
+  - 7z a %zip% %files%
   
   - ps: if(Test-Path $env:zip) {
           zip2nuget $env:zip $nupkg_b;
@@ -79,7 +73,7 @@ build_script:
 
 test_script:
   - SET fail=0
-  - bash -c "%tbs_settings%; ./thumbs check" || SET fail=1 & ver > nul
+  - thumbs check || SET fail=1 & ver > nul
   - ps: Push-Ctest-Results 'build'
   - ps: Push-AppveyorArtifact build\Testing\Temporary\LastTest.log
   - exit %fail%

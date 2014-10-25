@@ -9,18 +9,23 @@
 # export tbs_arch=x86
 # ./thumbs make
 
-# On Win (msvc):
+
+# On Win (msvc 2013):
 # C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall x86_amd64
-# C:\path\to\bash -c "export tbs_tools=msvc12; ./thumbs make"
+# SET tbs_tools=msvc12
+# thumbs make
 
 # On Win (mingw32):
 # SET path=C:\mingw32\bin;%path%
-# C:\path\to\bash -c "export tbs_tools=mingw; export tbs_arch=x86; ./thumbs make"
+# SET tbs_tools=mingw
+# SET tbs_arch=x86
+# thumbs make
 
 
 # Global settings are stored in env vars
 # Should be inherited
 
+[ $tbs_conf ]           || export tbs_conf=Release
 [ $tbs_arch ]           || export tbs_arch=x64
 [ $tbs_tools ]          || export tbs_tools=gnu
 [ $tbs_static_runtime ] || export tbs_static_runtime=0
@@ -30,10 +35,14 @@
 # tbsd_[name]_* contains settings specific to the dep
 # name should match the repo name
 
+# deps contains a map of what should be built/used
+# targ contains a target for each dep...
+# keep the keys in sync ... no assoc arrays on msys :/
 deps=()
+targ=()
 
 [ $tbsd_zlib_repo ]     || export tbsd_zlib_repo="https://github.com/imazen/zlib"
-deps+=(zlib)
+deps+=(zlib); targ+=(zlib_static)
 
 
 # dep processor
@@ -44,8 +53,9 @@ process_deps()
   mkdir deps
   cd build_deps
 
-  for dep in "${deps[@]}"
+  for key in "${!deps[@]}"
   do
+    dep=${deps[$key]}
     i_dep_repo="tbsd_${dep}_repo"
     i_dep_incdir="tbsd_${dep}_incdir"
     i_dep_libdir="tbsd_${dep}_libdir"
@@ -57,7 +67,7 @@ process_deps()
     then
       git clone ${!i_dep_repo} --depth 1
       cd $dep || exit 1
-      ./thumbs make || exit 1
+      ./thumbs make ${targ[$key]} || exit 1
       
       cp -u $(./thumbs list_inc) ../../deps
       cp -u $(./thumbs list_slib) ../../deps
@@ -106,15 +116,15 @@ then
   echo " Usage : ./thumbs [command]"
   echo ""
   echo " Commands:"
-  echo "   make      - builds everything"
-  echo "   check     - runs tests"
-  echo "   clean     - removes build files"
-  echo "   list      - echo paths to any interesting files"
-  echo "               space separated; relative"
-  echo "   list_bin  - echo binary paths"
-  echo "   list_inc  - echo lib include files"
-  echo "   list_slib - echo static lib path"
-  echo "   list_dlib - echo dynamic lib path"
+  echo "   make [target]   - builds everything"
+  echo "   check           - runs tests"
+  echo "   clean           - removes build files"
+  echo "   list            - echo paths to any interesting files"
+  echo "                     space separated; relative"
+  echo "   list_bin        - echo binary paths"
+  echo "   list_inc        - echo lib include files"
+  echo "   list_slib       - echo static lib path"
+  echo "   list_dlib       - echo dynamic lib path"
   echo ""
   exit
 fi
@@ -129,14 +139,18 @@ list=
 
 make=
 cm_tools=
-cm_args=()
+cm_args=(-DCMAKE_BUILD_TYPE=$tbs_conf -Wno-dev)
+
+target=
+[ $2 ] && target=$2
 
 # -----------
 
 case "$tbs_tools" in
 msvc12)
   cm_tools="Visual Studio 12"
-  make="msbuild.exe libpng.sln //p:Configuration=Release //v:m"
+  [ "$target" = "" ] && mstrg="libpng.sln" || mstrg="$target.vcxproj"
+  make="msbuild.exe $mstrg //p:Configuration=$tbs_conf //v:m"
   l_slib="./build/Release/libpng_static.lib"
   l_dlib="./build/Release/libpng.lib"
   l_bin="./build/Release/libpng.dll"
@@ -152,10 +166,15 @@ gnu)
 mingw)
   cm_tools="MinGW Makefiles"
   make=mingw32-make
+  # allow sh in path; some old cmake/mingw bug?
+  cm_args+=(-DCMAKE_SH=)
   l_slib="./build/libpng.a"
   l_dlib="./build/libpng.dll.a"
   l_bin="./build/libpng.dll"
   list="$l_bin $l_slib $l_dlib $l_inc" ;;
+
+*) echo "Tool config not found for $tbs_tools"
+   exit 1 ;;
 esac
 
 # -----------
@@ -166,6 +185,9 @@ x64)
   [ $tbs_tools = gnu -o $tbs_tools = mingw ] && cm_args+=(-DCMAKE_C_FLAGS=-m64) ;;
 x86)
   [ $tbs_tools = gnu -o $tbs_tools = mingw ] && cm_args+=(-DCMAKE_C_FLAGS=-m32) ;;
+
+*) echo "Arch config not found for $tbs_arch"
+   exit 1 ;;
 esac
 
 # -----------
@@ -206,4 +228,7 @@ list_bin) echo $l_bin ;;
 list_inc) echo $l_inc ;;
 list_slib) echo $l_slib ;;
 list_dlib) echo $l_dlib ;;
+
+*) echo "Unknown command $1"
+   exit 1 ;;
 esac
