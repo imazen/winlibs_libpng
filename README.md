@@ -39,6 +39,10 @@ Last build:
 
 [![Build status](https://ci.appveyor.com/api/projects/status/2ifs8txm9ltwmfsd)](https://ci.appveyor.com/project/imazen/libpng)
 
+### Travis build
+
+[![Build Status](https://travis-ci.org/imazen/libpng.svg)](https://travis-ci.org/imazen/libpng)
+
 ### Drone.io build
 
-[![Build Status](https://drone.io/github.com/imazen/libpng/status.png)](https://drone.io/github.com/imazen/libpng/latest)
+[![Build Status](https://drone.io/github.com/imazen/libpng/status.png)](https://drone.io/github.com/imazen/libpng)
