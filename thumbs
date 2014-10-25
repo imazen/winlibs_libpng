@@ -74,6 +74,7 @@ process_deps()
       
       # build scripts will most likely look for libs w/o suffixes (windows only)
       for lib in ../../deps/*_static.lib; do mv $lib ${lib%_static.lib}.lib 2>/dev/null; done
+      for lib in ../../deps/*_staticd.lib; do mv $lib ${lib%_staticd.lib}d.lib 2>/dev/null; done
       for lib in ../../deps/*.dll.a; do mv $lib ${lib%.dll.a}.a 2>/dev/null; done
       
       # look in both local and parent dep dirs
@@ -156,12 +157,16 @@ target=
 
 case "$tbs_tools" in
 msvc12)
+  # d suffix for debug builds
+  csx=
+  [ "$tbs_conf" = "Debug" ] && csx=d
+  
   cm_tools="Visual Studio 12"
   [ "$target" = "" ] && mstrg="libpng.sln" || mstrg="$target.vcxproj"
   make="msbuild.exe $mstrg //p:Configuration=$tbs_conf //v:m"
-  l_slib="./build/$tbs_conf/libpng_static.lib"
-  l_dlib="./build/$tbs_conf/libpng.lib"
-  l_bin="./build/$tbs_conf/libpng.dll"
+  l_slib="./build/$tbs_conf/libpng_static$csx.lib"
+  l_dlib="./build/$tbs_conf/libpng$csx.lib"
+  l_bin="./build/$tbs_conf/libpng$csx.dll"
   list="$l_bin $l_slib $l_dlib $l_inc" ;;
 gnu)
   cm_tools="Unix Makefiles"
